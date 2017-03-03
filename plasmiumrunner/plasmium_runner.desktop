@@ -1,0 +1,17 @@
+[Desktop Entry]
+Name=Plasmium Runner
+Comment=Search for tabs in Google Chrome and Chromium
+Icon=google-chrome
+Type=Service
+X-KDE-ServiceTypes=Plasma/Runner
+
+X-KDE-Library=plasmium_runner
+X-KDE-PluginInfo-Author=Aron Cederholm
+X-KDE-PluginInfo-Email=aron.cederholm@gmail.com
+X-KDE-PluginInfo-Name=plasmium_runner
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://plasma.kde.org/
+X-KDE-PluginInfo-Category=Chrome
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=true
