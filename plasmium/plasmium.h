@@ -9,6 +9,8 @@
 #include <QTextStream>
 #include <QDataStream>
 
+#include "plasmiumchrometab.h"
+
 class Plasmium: public QObject
 {
     Q_OBJECT
@@ -24,8 +26,18 @@ public:
     void init();
 
 public slots:
-    Q_SCRIPTABLE QString matchTab(const QString &text);
-    Q_SCRIPTABLE void switchTab(const QString &text);
+    Q_SCRIPTABLE void refreshTabs();
+    Q_SCRIPTABLE void muteAllTabs();
+    Q_SCRIPTABLE void muteAllBackgroundTabs();
+    Q_SCRIPTABLE void listAllAudibleWindows();
+    Q_SCRIPTABLE void unmuteActiveTab();
+    Q_SCRIPTABLE void unmuteAllTabs();
+    Q_SCRIPTABLE void highlightTab(int windowId, int tabIndex);
+    Q_SCRIPTABLE void highlightTab(const PlasmiumChromeTab &tab);
+    Q_SCRIPTABLE void newTab(const QString &uri);
+
+private:
+    void sendNativeMessage(const QJsonDocument &message);
 
 private Q_SLOTS:
     void readNativeMessage();
