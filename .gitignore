@@ -27,6 +27,7 @@
 *.exe
 *.out
 *.app
+/plasmium/plasmium
 
 # Moc files
 *.moc
