@@ -1,6 +1,14 @@
 # plasmium
 A Qt-based integration between chrome/chromium and the plasma desktop (as well as rofi)
 
+State
+------
+This is a work-in-progress. It is constantly being rewritten on a day-by-day basis.
+
+Youtube demos
+----
+[![Mute all background tabs youtube demonstration](https://i.ytimg.com/vi/jQE1cuYMpfY/maxresdefault.jpg)](https://youtu.be/jQE1cuYMpfY "Mute all background tabs youtube demonstration")
+
 Browser support
 ------
 * Chrome and Chromium
