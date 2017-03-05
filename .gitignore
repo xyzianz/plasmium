@@ -28,6 +28,7 @@
 *.out
 *.app
 /plasmium/plasmium
+/plasmiumrofimodi/plasmiumrofimodi
 
 # Moc files
 *.moc
@@ -35,3 +36,4 @@ moc_*
 
 # Generated Make files
 Makefile
+.qmake.stash
