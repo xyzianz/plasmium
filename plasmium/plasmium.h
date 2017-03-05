@@ -10,9 +10,7 @@
 #include <QDataStream>
 
 #include "plasmiumchrometab.h"
-
-typedef QMap<QString, QString> QStringMap;
-Q_DECLARE_METATYPE(QStringMap)
+#include "common.h"
 
 class Plasmium: public QObject
 {
