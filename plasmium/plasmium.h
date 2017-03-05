@@ -43,7 +43,7 @@ public slots:
     Q_SCRIPTABLE void newTab(const QString &uri);
 
 signals:
-    void listOfTopSites(QStringMap topsites);
+    Q_SCRIPTABLE void listOfTopSites(QStringMap topsites);
 
 private:
     void sendNativeMessage(const QJsonDocument &message);

@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 
     Plasmium plasmium;
     plasmium.init();
-    QDBusConnection::sessionBus().registerObject("/", &plasmium, QDBusConnection::ExportAllSlots|QDBusConnection::ExportAllSignals);
+    QDBusConnection::sessionBus().registerObject("/", &plasmium, QDBusConnection::ExportScriptableSlots|QDBusConnection::ExportScriptableSignals);
 
     app.exec();
     return 0;
