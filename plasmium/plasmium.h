@@ -27,6 +27,7 @@ public:
 
 public slots:
     Q_SCRIPTABLE void refreshTabs();
+    Q_SCRIPTABLE void listTopSites();
     Q_SCRIPTABLE void muteAllTabs();
     Q_SCRIPTABLE void muteAllBackgroundTabs();
     Q_SCRIPTABLE void listAllAudibleWindows();

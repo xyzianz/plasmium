@@ -66,6 +66,15 @@ void Plasmium::refreshTabs()
     this->sendNativeMessage(QJsonDocument(message));
 }//Plasmium::refreshTabs()
 
+void Plasmium::listTopSites()
+{
+    QJsonObject message
+    {
+        {"command", "list top sites"}
+    };
+    this->sendNativeMessage(QJsonDocument(message));
+}//Plasmium::listTopSites()
+
 void Plasmium::listAllAudibleWindows()
 {
     QJsonObject message
