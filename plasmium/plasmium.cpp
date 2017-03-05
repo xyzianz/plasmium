@@ -10,7 +10,6 @@
 #include "plasmium.h"
 #include "common.h"
 
-
 Plasmium::Plasmium()
 {
     m_in = new QFile();
@@ -74,6 +73,19 @@ void Plasmium::listTopSites()
     };
     this->sendNativeMessage(QJsonDocument(message));
 }//Plasmium::listTopSites()
+
+QStringMap Plasmium::getTopSites()
+{
+    QTimer timer;
+    timer.setSingleShot(true);
+    QEventLoop loop;
+    connect(this, SIGNAL(listOfTopSites(QStringMap)), &loop, SLOT(quit()));
+    connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    timer.start(1000);
+    this->listTopSites();
+    loop.exec();
+    return m_topsites;
+}//Plasmium::getTopSites();
 
 void Plasmium::listAllAudibleWindows()
 {
@@ -226,14 +238,31 @@ void Plasmium::readNativeMessage()
         // Some more debug logging
         debugStream << QString(b).toUtf8().toHex() << endl;
         debugStream << message.toJson(QJsonDocument::Indented) << endl;
+
+        // Do some actual parsing of message
+        if (message.object().value("command") == "list of top sites") {
+            QJsonArray topsites = message.object().value("sites").toArray();
+            m_topsites = QStringMap();
+            debugStream << array.length() << endl;
+            for (QJsonArray::const_iterator iter = topsites .constBegin(), end = topsites.constEnd(); iter < end; ++iter) {
+                m_topsites.insert((*iter).toObject().value("uri").toString(), (*iter).toObject().value("title").toString());
+                debugStream << (*iter).toObject().value("uri").toString() << endl;
+            }
+            emit listOfTopSites(m_topsites);
+        }
+
+        // Close debugging for now
         debugFile.flush();
         debugFile.close();
+
     }
 }//Plasmium::readNativeMessage()
 
 int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
+
+    qDBusRegisterMetaType<QStringMap>();
 
     if (!QDBusConnection::sessionBus().isConnected()) {
         fprintf(stderr, "Cannot connect to the D-Bus session bus.\n"
