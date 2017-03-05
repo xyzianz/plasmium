@@ -15,9 +15,9 @@
 class Plasmium: public QObject
 {
     Q_OBJECT
-    QStringList m_tabs;
     QString m_logfilepath;
     QStringMap m_topsites;
+    QStringMapMap m_tabs;
     QSocketNotifier *m_notify;
     QFile *m_in, *m_out;
     QDataStream *m_dataStreamIn, *m_dataStreamOut;
@@ -30,6 +30,7 @@ public:
 
 public slots:
     Q_SCRIPTABLE void refreshTabs();
+    Q_SCRIPTABLE QStringMapMap getTabs();
     Q_SCRIPTABLE void listTopSites();
     Q_SCRIPTABLE QStringMap getTopSites();
     Q_SCRIPTABLE void muteAllTabs();
@@ -43,7 +44,7 @@ public slots:
 
 signals:
     Q_SCRIPTABLE void listOfTopSites(QStringMap topsites);
-    Q_SCRIPTABLE void listOfTabs(QStringMap tabs);
+    Q_SCRIPTABLE void listOfTabs(QStringMapMap tabs);
 
 private:
     void sendNativeMessage(const QJsonDocument &message);

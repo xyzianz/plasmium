@@ -89,6 +89,19 @@ QStringMap Plasmium::getTopSites()
     return m_topsites;
 }//Plasmium::getTopSites();
 
+QStringMapMap Plasmium::getTabs()
+{
+    QTimer timer;
+    timer.setSingleShot(true);
+    QEventLoop loop;
+    connect(this, SIGNAL(listOfTabs(QStringMapMap)), &loop, SLOT(quit()));
+    connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    timer.start(1000);
+    this->refreshTabs();
+    loop.exec();
+    return m_tabs;
+}//Plasmium::getTabs();
+
 void Plasmium::listAllAudibleWindows()
 {
     QJsonObject message
@@ -252,6 +265,26 @@ void Plasmium::readNativeMessage()
             }
             emit listOfTopSites(m_topsites);
         }
+        // Do some actual parsing of message
+        if (message.object().value("command") == "list of tabs") {
+            QJsonObject windows = message.object().value("list").toObject();
+            m_tabs= QStringMapMap();
+            debugStream << windows.length() << endl;
+            for (QJsonObject::const_iterator iter = windows.constBegin(), end = windows.constEnd(); iter != end; ++iter) {
+                QJsonArray tabs = (*iter).toObject().value("windowInfo").toObject().value("tabs").toArray();
+                for (QJsonArray::const_iterator tabIter = tabs.constBegin(), tabEnd = tabs.constEnd(); tabIter < tabEnd; ++tabIter) {
+                    QStringMap values;
+                    values.insert("title", (*tabIter).toObject().value("title").toString());
+                    values.insert("uri", (*tabIter).toObject().value("url").toString());
+                    values.insert("favicon", (*tabIter).toObject().value("favIconUrl").toString());
+                    values.insert("windowId", QString("%1").arg((*tabIter).toObject().value("windowId").toInt()));
+                    values.insert("tabIndex", QString("%1").arg((*tabIter).toObject().value("index").toInt()));
+                    m_tabs.insert((*tabIter).toObject().value("url").toString(), values);
+                    debugStream << (*tabIter).toObject().value("url").toString() << endl;
+                }
+            }
+            emit listOfTabs(m_tabs);
+        }
 
         // Close debugging for now
         debugFile.flush();
@@ -265,6 +298,7 @@ int main(int argc, char **argv)
     QCoreApplication app(argc, argv);
 
     qDBusRegisterMetaType<QStringMap>();
+    qDBusRegisterMetaType<QStringMapMap>();
 
     if (!QDBusConnection::sessionBus().isConnected()) {
         // log

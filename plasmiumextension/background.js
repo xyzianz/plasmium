@@ -167,25 +167,10 @@ function getAllWindowsCallback(wins) {
         windowList[win.id] = {
             '@type': 'window', 
             windowInfo: win,
-            tabs: []
         };
-        win.tabs.forEach(function (tab, i) {
-            windowList[win.id].tabs[tab.id] = {
-                '@type': 'tab',
-                id: tab.id,
-                title: tab.title,
-                audible: tab.audible,
-                mutedInfo: tab.mutedInfo,
-                index: tab.index,
-                windowId: win.id,
-                highlighted: tab.highlighted
-            };
-        });
-//        superWindowInfo[win.id] = win;
-//        chrome.tabs.getAllInWindow(win.id, getAllTabsCallback);
     });
     if (connected) {
-        port.postMessage({command: 'list', list: windowList})
+        port.postMessage({command: 'list of tabs', list: windowList})
     }
 }
 
