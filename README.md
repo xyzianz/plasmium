@@ -48,7 +48,7 @@ What is working now
  * Open a new tab with a specified URI
  * Switch to a specific tab and bring its window to the front
  * Get a list of all windows currently playing audio
-* There is a rofi modi (a plugin for rofi, you will need to add it to your rofi setup/config yourself) which can open a new tab in your browser using a supplied uri, with rofi completion from the list of top sites
+* There is a rofi modi (a plugin for rofi, you will need to add it to your rofi setup/config yourself) which can open a new tab in your browser using a supplied uri, with rofi completion from the list of top sites, as well as switch active tab in the browser
 * There is a non-working krunner plugin which will be able to switch between tabs in the browser
 
 Contribute
@@ -67,7 +67,7 @@ Todo
 * a taskbar plasmoid integration, which only paints the plasma 5.9 audio icons on chrome windows which actually plays sound
 * a working krunner plugin to switch between tabs in the browser
 * extend the rofi plugin to also complete based on browser bookmarks, the history API
-* Build a second rofi plugin which switches tabs in browser, just like the krunner plugin is supposed to do
+* --Build a second rofi plugin which switches tabs in browser, just like the krunner plugin is supposed to do-- (Done!)
 * bind the XInput media keys to playing media objects in the browser, such as youtube, spotify or google play music.
 * ????
 * Profit!
