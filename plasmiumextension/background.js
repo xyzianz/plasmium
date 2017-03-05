@@ -16,6 +16,17 @@ chrome.runtime.onSuspend.addListener(function(){
 port.onMessage.addListener(function(msg) {
     console.log("Received" + msg.command);
     switch (msg.command) {
+
+        case 'list top sites':
+        chrome.topSites.get(function(sites){
+            var topsites = [];
+            sites.forEach(function(site) {
+                topsites.push({'@type': 'site', uri: site.url, title: site.title});
+            });
+            port.postMessage({command:'list of top sites', sites: topsites});
+        });
+        break;
+
         case 'list all tabs':
         chrome.windows.getAll({populate: true}, getAllWindowsCallback);
         break;
