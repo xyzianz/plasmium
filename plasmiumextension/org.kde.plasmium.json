@@ -2,7 +2,7 @@
   "name": "org.kde.plasmium",
   "description": "Expose certain parts of Chromium for Plasma integration and certain parts of Plasma for Chromium.",
   "type": "stdio",
-  "path": "/home/aron/bin/plasmium",
+  "path": "/usr/bin/plasmium",
   "allowed_origins": [
     "chrome-extension://moammmhhcchmjpcphpfiencfijnocile/"
   ]

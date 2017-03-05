@@ -6,12 +6,14 @@
 #include <QtDBus/QtDBus>
 #include <QFile>
 #include <QDataStream>
+#include <QDir>
 
 #include "plasmium.h"
 #include "common.h"
 
 Plasmium::Plasmium()
 {
+    m_logfilepath =  QDir::homePath().append("/.plasmium.log");
     m_in = new QFile();
     m_in->open(stdin, QIODevice::ReadOnly);
     m_dataStreamIn = new QDataStream(m_in);
@@ -42,7 +44,7 @@ Plasmium::~Plasmium()
 
 void Plasmium::init()
 {
-    QFile debugFile("/home/aron/.plasmium.log");
+    QFile debugFile(m_logfilepath);
     debugFile.open(QIODevice::ReadWrite|QIODevice::Text);
     debugFile.seek(debugFile.size());
     QTextStream debugStream(&debugFile);
@@ -175,7 +177,7 @@ void Plasmium::sendNativeMessage(const QJsonDocument &message)
     QByteArray rawIndentedMessage = message.toJson(QJsonDocument::Indented);
 
     // Log to debug file
-    QFile debugFile("/home/aron/.plasmium.log");
+    QFile debugFile(m_logfilepath);
     debugFile.open(QIODevice::ReadWrite|QIODevice::Text);
     debugFile.seek(debugFile.size());
     QTextStream debugStream(&debugFile);
@@ -217,7 +219,7 @@ void Plasmium::readNativeMessage()
     if (length > 0) {
         
         // Some debug logging
-        QFile debugFile("/home/aron/.plasmium.log");
+        QFile debugFile(m_logfilepath);
         debugFile.open(QIODevice::ReadWrite|QIODevice::Text);
         debugFile.seek(debugFile.size());
         QTextStream debugStream(&debugFile);
@@ -265,15 +267,12 @@ int main(int argc, char **argv)
     qDBusRegisterMetaType<QStringMap>();
 
     if (!QDBusConnection::sessionBus().isConnected()) {
-        fprintf(stderr, "Cannot connect to the D-Bus session bus.\n"
-                "To start it, run:\n"
-                "\teval `dbus-launch --auto-syntax`\n");
+        // log
         return 1;
     }
 
     if (!QDBusConnection::sessionBus().registerService(SERVICE_NAME)) {
-        fprintf(stderr, "%s\n",
-                qPrintable(QDBusConnection::sessionBus().lastError().message()));
+        //log
         exit(1);
     }
 
