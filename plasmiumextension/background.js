@@ -3,7 +3,7 @@ var superWindowInfo = {};
 var connected = true;
 
 port.onDisconnect.addListener(function() {
-  console.log("Disconnected.");
+  console.info("Disconnected.");
   connected = false;
 });
 
@@ -14,7 +14,7 @@ chrome.runtime.onSuspend.addListener(function(){
 });
 
 port.onMessage.addListener(function(msg) {
-    console.log("Received" + msg.command);
+    console.info("Received" + msg.command);
     switch (msg.command) {
 
         case 'list top sites':
@@ -40,14 +40,14 @@ port.onMessage.addListener(function(msg) {
                     var audible = false;
                     window.tabs.forEach(function(tab) {
                         if (tab.highlighted) {
-                            console.log(tab.title + ' is highlighted');
+                            console.info(tab.title + ' is highlighted');
                             windowTitle = tab.title;
                         }
                         if (tab.audible) {
-                            console.log(tab.title + ' may be audible...');
+                            console.info(tab.title + ' may be audible...');
                         }
                         if (tab.audible && !tab.mutedInfo.muted) {
-                            console.log(tab.title + ' is audible');
+                            console.info(tab.title + ' is audible');
                             audible = true;
                         }
                         if (windowTitle && audible) {
@@ -142,7 +142,7 @@ port.onMessage.addListener(function(msg) {
 });
 
 port.onDisconnect.addListener(function() {
-  console.log("Disconnected");
+  console.info("Disconnected");
 });
 
 
