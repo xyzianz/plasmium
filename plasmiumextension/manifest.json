@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Plasmium - KDE/Plasma desktop integration",
   "description": "Integrate your browser with the plasma desktop.",
-  "version": "1.0",
+  "version": "0.1",
   "background": {
     "scripts": ["background.js"]
   },
