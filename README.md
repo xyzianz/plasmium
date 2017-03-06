@@ -36,6 +36,16 @@ Then finally:
 * install `/plasmiumextension/org.kde.plasmium.json` into either `/etc/chromium/native-messaging-hosts` or `/etc/opt/chrome/native-messaging-hosts` depending on your browser.
 * open `chrome://extensions`, tick the `Developer mode` checkbox, press `Load unpacked extension...` and browse to the location of `plasmiumextension` and load.
 
+Rofi usage
+------
+Start rofi with the following parameters:
+
+    -show chrome -modi run,chrome:/usr/bin/plasmiumrofimodi,ssh
+
+Or if you want to combine several modis into one entry (please note, this disables opening urls not specifically in the chrome.topsites):
+
+    -show combi -modi combi -combi-modi chrome:/usr/bin/plasmiumrofimodi,run,window,ssh
+
 What is working now
 -------------------
 * There is a dbus interface with working implementations to:
