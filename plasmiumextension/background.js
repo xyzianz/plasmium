@@ -13,6 +13,18 @@ chrome.runtime.onSuspend.addListener(function(){
     port.disconnect();
 });
 
+chrome.runtime.onSuspendCanceled.addListener(function(){
+    chrome.runtime.reload();
+});
+
+chrome.runtime.onUpdateAvailable.addListener(function(){
+    port.postMessage({command: "quit"});
+    connected = false;
+    port.disconnect();
+    chrome.runtime.reload();
+});
+
+
 port.onMessage.addListener(function(msg) {
     console.info("Received" + msg.command);
     switch (msg.command) {
