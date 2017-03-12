@@ -12,6 +12,8 @@ class Plasmium;
 class BrowserConnection : public QObject
 {
     Q_OBJECT
+    quint32 m_blockSize;
+    int m_waitingForReply;
     QLocalSocket* m_connection;
     QLocalServer* m_server;
     Plasmium *m_plasmium;
@@ -21,18 +23,21 @@ public:
     ~BrowserConnection();
 
 public slots:
-    void send(const QJsonDocument &message);
+    void sendAsync(const QJsonDocument &message);
+    void sendSync(const QJsonDocument &message);
     bool isAlive();
     bool isConnected();
     void closeDisconnected();
 
 signals:
     Q_SCRIPTABLE void message(const QJsonDocument &message);
+    Q_SCRIPTABLE void reply(const QJsonDocument &reply);
     Q_SCRIPTABLE void quit(const QJsonDocument &message);
 
 private Q_SLOTS:
     void ping();
     void read();
+    void send(const QJsonDocument &message);
 };
 
 #endif // BROWSERCONNECTION_H

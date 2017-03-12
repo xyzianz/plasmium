@@ -47,6 +47,7 @@ public slots:
     Q_SCRIPTABLE void highlightTab(int windowId, int tabIndex);
     Q_SCRIPTABLE void highlightTab(const PlasmiumChromeTab &tab);
     Q_SCRIPTABLE void newTab(const QString &uri);
+    void log(const QString &string);
 
 signals:
     Q_SCRIPTABLE void listOfTopSites(QStringMap topsites);
@@ -55,7 +56,6 @@ signals:
 private Q_SLOTS:
     void sendMessageAsync(const QJsonDocument &message);
     void sendMessageSync(const QJsonDocument &message, QList<QJsonDocument> &response);
-    void log(const QString &string);
     void parseMessage(const QJsonDocument &message);
     void parseTabs(const QList<QJsonDocument> &tabs);
     void newConnection();
