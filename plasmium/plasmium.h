@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDataStream>
+#include <QtNetwork>
 
 #include "plasmiumchrometab.h"
 #include "common.h"
@@ -18,8 +19,10 @@ class Plasmium: public QObject
     QString m_logfilepath;
     QStringMap m_topsites;
     QStringMapMap m_tabs;
+    QLocalServer *m_server;
+    QList<BrowserConnection*> m_connections;
     QSocketNotifier *m_notify;
-    QFile *m_in, *m_out;
+    QFile *m_in, *m_out, *m_logfile;
     QDataStream *m_dataStreamIn, *m_dataStreamOut;
     QTextStream *m_textStreamIn, *m_textStreamOut;
 
@@ -46,11 +49,13 @@ signals:
     Q_SCRIPTABLE void listOfTopSites(QStringMap topsites);
     Q_SCRIPTABLE void listOfTabs(QStringMapMap tabs);
 
-private:
-    void sendNativeMessage(const QJsonDocument &message);
-
 private Q_SLOTS:
-    void readNativeMessage();
+    void sendMessageAsync(const QJsonDocument &message);
+    void sendMessageSync(const QJsonDocument &message, QJsonDocument &response);
+    void log(const QString &string);
+    void parseMessage(const QJsonDocument &message);
+    void newConnection();
+    void closeDisconnectedConnections();
 };
 
 

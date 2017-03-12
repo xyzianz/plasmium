@@ -13,7 +13,17 @@
 
 Plasmium::Plasmium()
 {
-    m_logfilepath =  QDir::homePath().append("/.plasmium.log");
+    m_logfile = new QFile(QDir::homePath().append("/.plasmium.log"));
+    m_logfile->open(QIODevice::ReadWrite|QIODevice::Text);
+    m_logfile->seek(m_logfile->size());
+    this->log("Starting Plasmium.");
+
+    m_server = new QLocalServer(this);
+
+    QString socketfile = QStandardPaths::locate(QStandardPaths::RuntimeLocation, "plasmium.sock", QStandardPaths::LocateFile);
+    m_server->listen(socketfile);
+    connect(m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
+
     m_in = new QFile();
     m_in->open(stdin, QIODevice::ReadOnly);
     m_dataStreamIn = new QDataStream(m_in);
@@ -27,6 +37,10 @@ Plasmium::Plasmium()
 
 Plasmium::~Plasmium()
 {
+    m_logfile->close();
+    delete m_logfile;
+
+    delete m_server;
     delete m_dataStreamIn;
     delete m_textStreamIn;
     m_in->close();
@@ -44,19 +58,36 @@ Plasmium::~Plasmium()
 
 void Plasmium::init()
 {
-    QFile debugFile(m_logfilepath);
-    debugFile.open(QIODevice::ReadWrite|QIODevice::Text);
-    debugFile.seek(debugFile.size());
-    QTextStream debugStream(&debugFile);
-    debugStream << endl;
-    debugStream << "Starting Plasmium!" << endl << endl;
-    debugFile.flush();
-    debugFile.close();
+    this->log("Initializing Plasmium Core");
 
     m_notify = new QSocketNotifier(fileno(stdin), QSocketNotifier::Read, this);
     connect(m_notify, SIGNAL(activated(int)), this, SLOT(readNativeMessage()));
 
 }//Plasmium::init()
+
+void Plasmium:log(const QString &string)
+{
+    QDateTime now(QDateTime(QDateTime::currentDateTimeUtc()));
+    QString output = "[" + now.toString(Qt::ISODateWithMs) + "] " + string + "\n";
+    m_logfile->seek(m_logfile->size());
+    m_logfile->write(output.toUtf8());
+    m_logfile->flush();
+}//Plasmium::log(const QString&)
+
+void Plasmium::newConnection()
+{
+    while (m_server->hasPendingConnections()) {
+        QLocalSocket *connection = m_server->nextPendingConnection();
+        BrowserConnection *browserConnection = new BrowserConnection(connection, m_server, this);
+        m_connections << browserConnection;
+        connect(browserConnection, SIGNAL(quit()), this, SLOT(closeDisconnectedConnections()));
+        connect(browserConnection, SIGNAL(message(const QJsonDocument&)), this, SLOT(incomingMessage(const QJsonDocument&)));
+    }
+}//Plasmium::newConnection()
+
+void Plasmium::closeDisconnectedConnections()
+{
+}//Plasmium::closeDisconnectedConnections()
 
 void Plasmium::refreshTabs()
 {
@@ -174,102 +205,74 @@ void Plasmium::newTab(const QString &uri)
     this->sendNativeMessage(QJsonDocument(message));
 }//Plasmium::newTab()
 
-void Plasmium::sendNativeMessage(const QJsonDocument &message)
+void Plasmium::sendMessageAsync(const QJsonDocument &message)
 {
-    // Calculate 32bit "chrome native byte order"
-    // (which seems to imply LittleEndian) integer 
-    // identifying the byte length of a message to send.
-    quint32 length = message.toJson(QJsonDocument::Compact).length();
-    QByteArray size;
-    QDataStream sizestream(&size, QIODevice::WriteOnly);
-    sizestream.setByteOrder(QDataStream::LittleEndian);
-    sizestream << length;
+    QString command = message.object().value("command").toString("No command found!");
+    this.log("Sending message: " + command);
 
-    // Convert message to QByteArray
-    QByteArray rawMessage = message.toJson(QJsonDocument::Compact);
-    QByteArray rawIndentedMessage = message.toJson(QJsonDocument::Indented);
-
-    // Log to debug file
-    QFile debugFile(m_logfilepath);
-    debugFile.open(QIODevice::ReadWrite|QIODevice::Text);
-    debugFile.seek(debugFile.size());
-    QTextStream debugStream(&debugFile);
-    debugStream << "Sending:" << endl;
-    debugStream << size.toHex() << "    " << length << endl;
-    debugStream << rawMessage.toHex() << endl << rawIndentedMessage << endl;
-    debugFile.flush();
-    debugFile.close();
-
-    // Write actual bytes to stdout
-    QFile o;
-    o.open(stdout, QIODevice::WriteOnly);
-    o.write(size.append(rawMessage));
-    o.flush();
-    o.close();
+    // for all connections registered:
+    //      send;
     
-}//Plasmium::sendNativeMessage()
+}//Plasmium::sendMessageAsync(const QJsonDocument &)
 
-void Plasmium::readNativeMessage()
+void Plasmium::sendMessageSync(const QJsonDocument &message, QJsonDocument &response)
 {
-    // Open stdin as a QFile and create a LittleEndian DataStream reader on it
-    QFile qtin;
-    qtin.open(stdin, QIODevice::ReadOnly);
-    QDataStream in(&qtin);
-    in.setByteOrder(QDataStream::LittleEndian);
+    QString command = message.object().value("command").toString("No command found!");
+    this.log("Sending message: " + command);
 
-    // Read 4 bytes of data (in LittleEndian format) from DataStream on stdin into a unsigned 32-bit integer
-    // representing the length of data to be read
-    quint32 length;
-    QByteArray array;
-    in >> length;
-
-    // Get ASCII HEX byte representation of data length variable
-    QByteArray sizearray;
-    QDataStream sizestream(&sizearray, QIODevice::WriteOnly);
-    sizestream << length;
+    QTimer timer;
+    timer.setSingleShot(true);
+    QEventLoop loop;
+    connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    // create responseMessageList
+    // for each registered connection
+    //     connect syncResponse and syncAbort
+    //     send on connection
+    timer.start(1000);
+    // unconnect all signals
+    // destroy responseMessageList
+    loop.exec();
+    // parse all responses caught and save to response object
     
-    // If there is data specified to be read, read it
-    if (length > 0) {
-        
-        // Some debug logging
-        QFile debugFile(m_logfilepath);
-        debugFile.open(QIODevice::ReadWrite|QIODevice::Text);
-        debugFile.seek(debugFile.size());
-        QTextStream debugStream(&debugFile);
-        debugStream << "Reading:" << endl;
-        debugStream << sizearray.toHex() << "    " << length << endl;
+}//Plasmium::sendMessageSync(const QJsonDocument &, QJsonDocument &)
 
-        // Actually read data from stdin into a QJsonDocument, via a QByteArray
-        char* s = new char[length];
-        qtin.read(s, length);//>> input;//char* s;
-        QByteArray b(s);
-        if (static_cast<quint32>(b.length()) > length) {
-            b.chop(b.length() - length);
+constexpr unsigned int getCommandCase(const QString &command)
+{
+    QString[] list = {
+        "list of top sites",
+        "list of tabs",
+        "ping",
+        "pong"
+    };
+    
+    int i = 0;
+    for (QString &item: list) {
+        if (item == command) {
+            return i;
         }
-        delete s;
-        QJsonParseError p;
-        QJsonDocument message = QJsonDocument::fromJson(b, &p);
+    }
+    return -1;
+}//getCommandCase(const QString &)
 
-        // Some more debug logging
-        debugStream << QString(b).toUtf8().toHex() << endl;
-        debugStream << message.toJson(QJsonDocument::Indented) << endl;
-
-        // Do some actual parsing of message
-        if (message.object().value("command") == "list of top sites") {
+void Plasmium::parseMessage(const QJsonDocument &message)
+{
+    QString command = message.object().value("command").toString("No command found!");
+    this.log("Parsing incoming message: " + command);
+    switch (getCommandCase(command)) {
+        case getCommandCase("list of top sites"):
             QJsonArray topsites = message.object().value("sites").toArray();
+            this->log("Got a list of " + topsites.size() + " top sites.");
             m_topsites = QStringMap();
-            debugStream << array.length() << endl;
             for (QJsonArray::const_iterator iter = topsites .constBegin(), end = topsites.constEnd(); iter < end; ++iter) {
                 m_topsites.insert((*iter).toObject().value("uri").toString(), (*iter).toObject().value("title").toString());
-                debugStream << (*iter).toObject().value("uri").toString() << endl;
             }
             emit listOfTopSites(m_topsites);
-        }
-        // Do some actual parsing of message
-        if (message.object().value("command") == "list of tabs") {
+            break;//list of top sites
+
+        case getCommandCase("list of tabs"):
             QJsonObject windows = message.object().value("list").toObject();
             m_tabs= QStringMapMap();
-            debugStream << windows.length() << endl;
+            this->log("Got a list of " + topsites.size() + " tabs.");
             for (QJsonObject::const_iterator iter = windows.constBegin(), end = windows.constEnd(); iter != end; ++iter) {
                 QJsonArray tabs = (*iter).toObject().value("windowInfo").toObject().value("tabs").toArray();
                 for (QJsonArray::const_iterator tabIter = tabs.constBegin(), tabEnd = tabs.constEnd(); tabIter < tabEnd; ++tabIter) {
@@ -280,18 +283,12 @@ void Plasmium::readNativeMessage()
                     values.insert("windowId", QString("%1").arg((*tabIter).toObject().value("windowId").toInt()));
                     values.insert("tabIndex", QString("%1").arg((*tabIter).toObject().value("index").toInt()));
                     m_tabs.insert((*tabIter).toObject().value("url").toString(), values);
-                    debugStream << (*tabIter).toObject().value("url").toString() << endl;
                 }
             }
             emit listOfTabs(m_tabs);
-        }
-
-        // Close debugging for now
-        debugFile.flush();
-        debugFile.close();
-
-    }
-}//Plasmium::readNativeMessage()
+            break;//list of tabs
+    }//switch
+}//Plasmium::parseMessage(const QJsonDocument &)
 
 int main(int argc, char **argv)
 {
