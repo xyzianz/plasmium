@@ -3,10 +3,9 @@
 /**
  * 
  */
-BrowserConnection::BrowserConnection(connection, server, plasmium)
-    : m_connection(connection), m_server(server), m_plasmium(plasmium)
+BrowserConnection::BrowserConnection(QLocalSocket* socket, QLocalServer* server, Plasmium* plasmium)
+    : m_connection(socket), m_server(server), m_plasmium(plasmium)
 {
-    Q_OBJECT
 }//BrowserConnection::BrowserConnection()
 
 /**

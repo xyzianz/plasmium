@@ -7,6 +7,8 @@
 
 #include "plasmium.h"
 
+class Plasmium;
+
 class BrowserConnection : public QObject
 {
     Q_OBJECT

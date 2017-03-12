@@ -65,7 +65,7 @@ void Plasmium::init()
 
 }//Plasmium::init()
 
-void Plasmium:log(const QString &string)
+void Plasmium::log(const QString &string)
 {
     QDateTime now(QDateTime(QDateTime::currentDateTimeUtc()));
     QString output = "[" + now.toString(Qt::ISODateWithMs) + "] " + string + "\n";
@@ -95,7 +95,7 @@ void Plasmium::refreshTabs()
     {
         {"command", "list all tabs"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::refreshTabs()
 
 void Plasmium::listTopSites()
@@ -104,7 +104,7 @@ void Plasmium::listTopSites()
     {
         {"command", "list top sites"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::listTopSites()
 
 QStringMap Plasmium::getTopSites()
@@ -122,16 +122,20 @@ QStringMap Plasmium::getTopSites()
 
 QStringMapMap Plasmium::getTabs()
 {
-    QTimer timer;
-    timer.setSingleShot(true);
-    QEventLoop loop;
-    connect(this, SIGNAL(listOfTabs(QStringMapMap)), &loop, SLOT(quit()));
-    connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-    timer.start(1000);
-    this->refreshTabs();
-    loop.exec();
+    QJsonObject message
+    {
+        {"command", "list all tabs"}
+    };
+    QList<QJsonDocument> response;
+    this->sendMessageSync(QJsonDocument(message), response);
+    this->parseTabs(response);
     return m_tabs;
 }//Plasmium::getTabs();
+
+void Plasmium::parseTabs(const QList<QJsonDocument> &tabs)
+{
+    
+}//Plasmium::parseTabs(const QList<QJsonDocument> &)
 
 void Plasmium::listAllAudibleWindows()
 {
@@ -139,7 +143,7 @@ void Plasmium::listAllAudibleWindows()
     {
         {"command", "list all audible windows"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::listAllAudibleWindows()
 
 void Plasmium::muteAllTabs()
@@ -148,7 +152,7 @@ void Plasmium::muteAllTabs()
     {
         {"command", "mute all tabs"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::muteAllTabs()
 
 void Plasmium::muteAllBackgroundTabs()
@@ -157,7 +161,7 @@ void Plasmium::muteAllBackgroundTabs()
     {
         {"command", "mute all background tabs"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::muteAllBackgroundTabs()
 
 void Plasmium::unmuteActiveTab()
@@ -166,7 +170,7 @@ void Plasmium::unmuteActiveTab()
     {
         {"command", "unmute active tab"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::unmuteActiveTab()
 
 void Plasmium::unmuteAllTabs()
@@ -175,7 +179,7 @@ void Plasmium::unmuteAllTabs()
     {
         {"command", "unmute all tabs"}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::unmuteAllTabs()
 
 
@@ -187,7 +191,7 @@ void Plasmium::highlightTab(int windowId, int tabIndex)
         {"windowId", windowId},
         {"tabIndex", tabIndex}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::highlightTab()
 
 void Plasmium::highlightTab(const PlasmiumChromeTab &tab)
@@ -202,23 +206,23 @@ void Plasmium::newTab(const QString &uri)
         {"command", "new active tab"},
         {"uri", uri}
     };
-    this->sendNativeMessage(QJsonDocument(message));
+    this->sendMessageAsync(QJsonDocument(message));
 }//Plasmium::newTab()
 
 void Plasmium::sendMessageAsync(const QJsonDocument &message)
 {
     QString command = message.object().value("command").toString("No command found!");
-    this.log("Sending message: " + command);
+    this->log(QString("Sending message: ").arg(command));
 
     // for all connections registered:
     //      send;
     
 }//Plasmium::sendMessageAsync(const QJsonDocument &)
 
-void Plasmium::sendMessageSync(const QJsonDocument &message, QJsonDocument &response)
+void Plasmium::sendMessageSync(const QJsonDocument &message, QList<QJsonDocument> &response)
 {
     QString command = message.object().value("command").toString("No command found!");
-    this.log("Sending message: " + command);
+    this->log(QString("Sending message: %1").arg(command));
 
     QTimer timer;
     timer.setSingleShot(true);
@@ -236,58 +240,38 @@ void Plasmium::sendMessageSync(const QJsonDocument &message, QJsonDocument &resp
     
 }//Plasmium::sendMessageSync(const QJsonDocument &, QJsonDocument &)
 
-constexpr unsigned int getCommandCase(const QString &command)
-{
-    QString[] list = {
-        "list of top sites",
-        "list of tabs",
-        "ping",
-        "pong"
-    };
-    
-    int i = 0;
-    for (QString &item: list) {
-        if (item == command) {
-            return i;
-        }
-    }
-    return -1;
-}//getCommandCase(const QString &)
-
 void Plasmium::parseMessage(const QJsonDocument &message)
 {
     QString command = message.object().value("command").toString("No command found!");
-    this.log("Parsing incoming message: " + command);
-    switch (getCommandCase(command)) {
-        case getCommandCase("list of top sites"):
+    this->log(QString("Parsing incoming message: ") + command);
+
+    if (command == "list of top sites") {
             QJsonArray topsites = message.object().value("sites").toArray();
-            this->log("Got a list of " + topsites.size() + " top sites.");
+            this->log(QString("Got a list of %1 ").arg(topsites.size()));
             m_topsites = QStringMap();
             for (QJsonArray::const_iterator iter = topsites .constBegin(), end = topsites.constEnd(); iter < end; ++iter) {
                 m_topsites.insert((*iter).toObject().value("uri").toString(), (*iter).toObject().value("title").toString());
             }
             emit listOfTopSites(m_topsites);
-            break;//list of top sites
+    }//list of top sites
 
-        case getCommandCase("list of tabs"):
-            QJsonObject windows = message.object().value("list").toObject();
-            m_tabs= QStringMapMap();
-            this->log("Got a list of " + topsites.size() + " tabs.");
-            for (QJsonObject::const_iterator iter = windows.constBegin(), end = windows.constEnd(); iter != end; ++iter) {
-                QJsonArray tabs = (*iter).toObject().value("windowInfo").toObject().value("tabs").toArray();
-                for (QJsonArray::const_iterator tabIter = tabs.constBegin(), tabEnd = tabs.constEnd(); tabIter < tabEnd; ++tabIter) {
-                    QStringMap values;
-                    values.insert("title", (*tabIter).toObject().value("title").toString());
-                    values.insert("uri", (*tabIter).toObject().value("url").toString());
-                    values.insert("favicon", (*tabIter).toObject().value("favIconUrl").toString());
-                    values.insert("windowId", QString("%1").arg((*tabIter).toObject().value("windowId").toInt()));
-                    values.insert("tabIndex", QString("%1").arg((*tabIter).toObject().value("index").toInt()));
-                    m_tabs.insert((*tabIter).toObject().value("url").toString(), values);
-                }
+    else if (command == "list of tabs") {
+        QJsonObject windows = message.object().value("list").toObject();
+        m_tabs= QStringMapMap();
+        this->log(QString("Got a list of %1 windows.").arg(windows.size()));
+        for (QJsonObject::const_iterator iter = windows.constBegin(), end = windows.constEnd(); iter != end; ++iter) {
+            QJsonArray tabs = (*iter).toObject().value("windowInfo").toObject().value("tabs").toArray();
+            for (QJsonArray::const_iterator tabIter = tabs.constBegin(), tabEnd = tabs.constEnd(); tabIter < tabEnd; ++tabIter) {
+                QStringMap values;
+                values.insert("title", (*tabIter).toObject().value("title").toString());
+                values.insert("uri", (*tabIter).toObject().value("url").toString());
+                values.insert("favicon", (*tabIter).toObject().value("favIconUrl").toString());
+                values.insert("windowId", QString("%1").arg((*tabIter).toObject().value("windowId").toInt()));
+                values.insert("tabIndex", QString("%1").arg((*tabIter).toObject().value("index").toInt()));
+                m_tabs.insert((*tabIter).toObject().value("url").toString(), values);
             }
-            emit listOfTabs(m_tabs);
-            break;//list of tabs
-    }//switch
+        }
+    }//list of tabs
 }//Plasmium::parseMessage(const QJsonDocument &)
 
 int main(int argc, char **argv)

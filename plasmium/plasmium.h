@@ -11,7 +11,10 @@
 #include <QtNetwork>
 
 #include "plasmiumchrometab.h"
+#include "browserconnection.h"
 #include "common.h"
+
+class BrowserConnection;
 
 class Plasmium: public QObject
 {
@@ -51,9 +54,10 @@ signals:
 
 private Q_SLOTS:
     void sendMessageAsync(const QJsonDocument &message);
-    void sendMessageSync(const QJsonDocument &message, QJsonDocument &response);
+    void sendMessageSync(const QJsonDocument &message, QList<QJsonDocument> &response);
     void log(const QString &string);
     void parseMessage(const QJsonDocument &message);
+    void parseTabs(const QList<QJsonDocument> &tabs);
     void newConnection();
     void closeDisconnectedConnections();
 };
