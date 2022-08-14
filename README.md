@@ -5,14 +5,6 @@ State
 ------
 This is a work-in-progress. It is constantly being rewritten on a day-by-day basis.
 
-Youtube demos
-----
-[![Mute all background tabs youtube demonstration](https://i.ytimg.com/vi/jQE1cuYMpfY/maxresdefault.jpg)](https://youtu.be/jQE1cuYMpfY "Mute all background tabs youtube demonstration")
-
-[![Switch between open tabs from rofi](https://i.ytimg.com/vi/br34XgtWE9g/maxresdefault.jpg)](https://youtu.be/br34XgtWE9g "Switch between open tabs from rofi")
-
-[![Open new tabs via topsites or url from rofi](https://i.ytimg.com/vi/jI206-hqpao/maxresdefault.jpg)](https://youtu.be/jI206-hqpao "Open new tabs via topsites or url from rofi")
-
 Browser support
 ------
 * Chrome and Chromium
